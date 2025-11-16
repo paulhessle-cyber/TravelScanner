@@ -1,0 +1,318 @@
+import React, { useState } from 'react';
+import { Car, Train, Plane, Search, MapPin } from 'lucide-react';
+
+export default function TravelScanner() {
+  const [activeMode, setActiveMode] = useState(null);
+  const [railData, setRailData] = useState({
+    timeframe: '',
+    ticketType: '',
+    destination: '',
+    origin: '',
+    results: null
+  });
+  const [searchHistory, setSearchHistory] = useState([]);
+
+  const handleRailSearch = async () => {
+    if (!railData.timeframe || !railData.ticketType || !railData.destination || !railData.origin) {
+      alert('Please fill in all fields');
+      return;
+    }
+
+    // Simulate API call with mock data
+    const mockResults = {
+      mainStation: {
+        from: railData.origin,
+        to: railData.destination,
+        price: (Math.random() * 50 + 20).toFixed(2),
+        duration: '2h 15m'
+      },
+      alternatives: [
+        {
+          from: `${railData.origin} Parkway`,
+          to: railData.destination,
+          price: (Math.random() * 45 + 18).toFixed(2),
+          duration: '2h 30m',
+          distance: '12 miles from origin'
+        },
+        {
+          from: `${railData.origin} Central`,
+          to: railData.destination,
+          price: (Math.random() * 48 + 19).toFixed(2),
+          duration: '2h 20m',
+          distance: '8 miles from origin'
+        }
+      ].filter(alt => Math.abs(parseFloat(alt.price) - parseFloat(mockResults.mainStation?.price || 0)) <= 1)
+    };
+
+    const newSearch = {
+      mode: 'Rail',
+      query: `${railData.origin} → ${railData.destination}`,
+      timeframe: railData.timeframe,
+      ticketType: railData.ticketType,
+      results: mockResults,
+      timestamp: new Date().toLocaleString()
+    };
+
+    setSearchHistory(prev => [newSearch, ...prev]);
+    setRailData(prev => ({ ...prev, results: mockResults }));
+  };
+
+  const checkSurroundingStations = () => {
+    alert('Checking surrounding stations within 100 miles...');
+    handleRailSearch();
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-8">
+      <div className="max-w-4xl mx-auto">
+        {/* Header */}
+        <h1 className="text-6xl font-bold text-center mb-8 text-gray-800" style={{ fontFamily: 'Georgia, serif' }}>
+          Travel Scanner
+        </h1>
+
+        {/* Mode Selection Buttons */}
+        <div className="grid grid-cols-3 gap-4 mb-8">
+          <button
+            onClick={() => setActiveMode('road')}
+            className={`relative p-6 rounded-2xl text-white text-2xl font-bold transition-all duration-200 ${
+              activeMode === 'road'
+                ? 'bg-blue-600 shadow-lg scale-105 ring-4 ring-blue-300'
+                : 'bg-blue-500 shadow-md hover:shadow-lg hover:scale-102'
+            }`}
+            style={{
+              boxShadow: activeMode === 'road' 
+                ? '0 8px 0 #1e40af, 0 12px 20px rgba(0,0,0,0.3)'
+                : '0 6px 0 #2563eb, 0 8px 15px rgba(0,0,0,0.2)',
+              transform: activeMode === 'road' ? 'translateY(-2px)' : 'translateY(0)'
+            }}
+          >
+            <Car className="w-12 h-12 mx-auto mb-2" />
+            Road
+          </button>
+
+          <button
+            onClick={() => setActiveMode('rail')}
+            className={`relative p-6 rounded-2xl text-white text-2xl font-bold transition-all duration-200 ${
+              activeMode === 'rail'
+                ? 'bg-orange-600 shadow-lg scale-105 ring-4 ring-orange-300'
+                : 'bg-orange-500 shadow-md hover:shadow-lg hover:scale-102'
+            }`}
+            style={{
+              boxShadow: activeMode === 'rail'
+                ? '0 8px 0 #c2410c, 0 12px 20px rgba(0,0,0,0.3)'
+                : '0 6px 0 #ea580c, 0 8px 15px rgba(0,0,0,0.2)',
+              transform: activeMode === 'rail' ? 'translateY(-2px)' : 'translateY(0)'
+            }}
+          >
+            <Train className="w-12 h-12 mx-auto mb-2" />
+            Rail
+          </button>
+
+          <button
+            onClick={() => setActiveMode('air')}
+            className={`relative p-6 rounded-2xl text-white text-2xl font-bold transition-all duration-200 ${
+              activeMode === 'air'
+                ? 'bg-teal-700 shadow-lg scale-105 ring-4 ring-teal-300'
+                : 'bg-teal-600 shadow-md hover:shadow-lg hover:scale-102'
+            }`}
+            style={{
+              boxShadow: activeMode === 'air'
+                ? '0 8px 0 #0f766e, 0 12px 20px rgba(0,0,0,0.3)'
+                : '0 6px 0 #0d9488, 0 8px 15px rgba(0,0,0,0.2)',
+              transform: activeMode === 'air' ? 'translateY(-2px)' : 'translateY(0)'
+            }}
+          >
+            <Plane className="w-12 h-12 mx-auto mb-2" />
+            Air
+          </button>
+        </div>
+
+        {/* Rail Form */}
+        {activeMode === 'rail' && (
+          <div className="bg-white rounded-xl shadow-xl p-8 mb-8">
+            <h2 className="text-3xl font-bold mb-6 text-orange-600 flex items-center">
+              <Train className="w-8 h-8 mr-3" />
+              UK Rail Journey
+            </h2>
+
+            <div className="space-y-6">
+              {/* Timeframe Selection */}
+              <div>
+                <label className="block text-lg font-semibold mb-2 text-gray-700">
+                  When do you want to travel?
+                </label>
+                <div className="grid grid-cols-3 gap-3">
+                  {['Day', 'Week', 'Month'].map(time => (
+                    <button
+                      key={time}
+                      onClick={() => setRailData(prev => ({ ...prev, timeframe: time }))}
+                      className={`p-3 rounded-lg font-medium transition-all ${
+                        railData.timeframe === time
+                          ? 'bg-orange-500 text-white shadow-md'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                    >
+                      {time}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Ticket Type */}
+              <div>
+                <label className="block text-lg font-semibold mb-2 text-gray-700">
+                  Ticket Type
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  {['Single', 'Return'].map(type => (
+                    <button
+                      key={type}
+                      onClick={() => setRailData(prev => ({ ...prev, ticketType: type }))}
+                      className={`p-3 rounded-lg font-medium transition-all ${
+                        railData.ticketType === type
+                          ? 'bg-orange-500 text-white shadow-md'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                    >
+                      {type}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Destination */}
+              <div>
+                <label className="block text-lg font-semibold mb-2 text-gray-700">
+                  Where do you want to travel to?
+                </label>
+                <input
+                  type="text"
+                  value={railData.destination}
+                  onChange={(e) => setRailData(prev => ({ ...prev, destination: e.target.value }))}
+                  placeholder="e.g., London Euston"
+                  className="w-full p-3 border-2 border-gray-300 rounded-lg focus:border-orange-500 focus:outline-none"
+                />
+              </div>
+
+              {/* Origin */}
+              <div>
+                <label className="block text-lg font-semibold mb-2 text-gray-700">
+                  Where are you travelling from?
+                </label>
+                <input
+                  type="text"
+                  value={railData.origin}
+                  onChange={(e) => setRailData(prev => ({ ...prev, origin: e.target.value }))}
+                  placeholder="e.g., Manchester Piccadilly"
+                  className="w-full p-3 border-2 border-gray-300 rounded-lg focus:border-orange-500 focus:outline-none"
+                />
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-3">
+                <button
+                  onClick={handleRailSearch}
+                  className="flex-1 bg-orange-500 text-white p-4 rounded-lg font-bold text-lg hover:bg-orange-600 transition-colors flex items-center justify-center"
+                >
+                  <Search className="w-5 h-5 mr-2" />
+                  Search Routes
+                </button>
+                <button
+                  onClick={checkSurroundingStations}
+                  className="flex-1 bg-teal-600 text-white p-4 rounded-lg font-bold text-lg hover:bg-teal-700 transition-colors flex items-center justify-center"
+                >
+                  <MapPin className="w-5 h-5 mr-2" />
+                  Check Surrounding Stations
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Road Placeholder */}
+        {activeMode === 'road' && (
+          <div className="bg-white rounded-xl shadow-xl p-8 mb-8">
+            <h2 className="text-3xl font-bold mb-4 text-blue-600 flex items-center">
+              <Car className="w-8 h-8 mr-3" />
+              Road Journey
+            </h2>
+            <p className="text-gray-600 text-lg">Road pricing coming soon...</p>
+          </div>
+        )}
+
+        {/* Air Placeholder */}
+        {activeMode === 'air' && (
+          <div className="bg-white rounded-xl shadow-xl p-8 mb-8">
+            <h2 className="text-3xl font-bold mb-4 text-teal-700 flex items-center">
+              <Plane className="w-8 h-8 mr-3" />
+              Air Travel
+            </h2>
+            <p className="text-gray-600 text-lg">Flight pricing coming soon...</p>
+          </div>
+        )}
+
+        {/* Search History */}
+        {searchHistory.length > 0 && (
+          <div className="bg-white rounded-xl shadow-xl p-8">
+            <h2 className="text-2xl font-bold mb-6 text-gray-800">Search Results</h2>
+            <div className="space-y-6">
+              {searchHistory.map((search, idx) => (
+                <div key={idx} className="border-2 border-gray-200 rounded-lg p-6">
+                  <div className="flex justify-between items-start mb-4">
+                    <div>
+                      <h3 className="text-xl font-bold text-gray-800">{search.query}</h3>
+                      <p className="text-sm text-gray-500">
+                        {search.ticketType} • {search.timeframe} • {search.timestamp}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Main Route */}
+                  <div className="bg-orange-50 rounded-lg p-4 mb-3">
+                    <p className="font-semibold text-gray-700 mb-2">Direct Route</p>
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <p className="text-lg font-bold">{search.results.mainStation.from} → {search.results.mainStation.to}</p>
+                        <p className="text-sm text-gray-600">{search.results.mainStation.duration}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-2xl font-bold text-orange-600">£{search.results.mainStation.price}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Alternative Routes */}
+                  {search.results.alternatives.length > 0 && (
+                    <div>
+                      <p className="font-semibold text-gray-700 mb-2">Alternative Stations (within £1)</p>
+                      {search.results.alternatives.map((alt, altIdx) => (
+                        <div key={altIdx} className="bg-gray-50 rounded-lg p-4 mb-2">
+                          <div className="flex justify-between items-center">
+                            <div>
+                              <p className="font-medium">{alt.from} → {search.results.mainStation.to}</p>
+                              <p className="text-sm text-gray-600">{alt.duration} • {alt.distance}</p>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-xl font-bold text-green-600">£{alt.price}</p>
+                              <p className="text-xs text-gray-500">
+                                Save £{(parseFloat(search.results.mainStation.price) - parseFloat(alt.price)).toFixed(2)}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {search.results.alternatives.length === 0 && (
+                    <p className="text-sm text-gray-500 italic">No cheaper alternatives within £1 found within 100 miles</p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
