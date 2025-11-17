@@ -1,318 +1,575 @@
-import React, { useState } from 'react';
-import { Car, Train, Plane, Search, MapPin } from 'lucide-react';
-
-export default function TravelScanner() {
-  const [activeMode, setActiveMode] = useState(null);
-  const [railData, setRailData] = useState({
-    timeframe: '',
-    ticketType: '',
-    destination: '',
-    origin: '',
-    results: null
-  });
-  const [searchHistory, setSearchHistory] = useState([]);
-
-  const handleRailSearch = async () => {
-    if (!railData.timeframe || !railData.ticketType || !railData.destination || !railData.origin) {
-      alert('Please fill in all fields');
-      return;
-    }
-
-    // Simulate API call with mock data
-    const mockResults = {
-      mainStation: {
-        from: railData.origin,
-        to: railData.destination,
-        price: (Math.random() * 50 + 20).toFixed(2),
-        duration: '2h 15m'
-      },
-      alternatives: [
-        {
-          from: `${railData.origin} Parkway`,
-          to: railData.destination,
-          price: (Math.random() * 45 + 18).toFixed(2),
-          duration: '2h 30m',
-          distance: '12 miles from origin'
-        },
-        {
-          from: `${railData.origin} Central`,
-          to: railData.destination,
-          price: (Math.random() * 48 + 19).toFixed(2),
-          duration: '2h 20m',
-          distance: '8 miles from origin'
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Travel Scanner</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-      ].filter(alt => Math.abs(parseFloat(alt.price) - parseFloat(mockResults.mainStation?.price || 0)) <= 1)
-    };
 
-    const newSearch = {
-      mode: 'Rail',
-      query: `${railData.origin} → ${railData.destination}`,
-      timeframe: railData.timeframe,
-      ticketType: railData.ticketType,
-      results: mockResults,
-      timestamp: new Date().toLocaleString()
-    };
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #e3f2fd 0%, #c5cae9 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
 
-    setSearchHistory(prev => [newSearch, ...prev]);
-    setRailData(prev => ({ ...prev, results: mockResults }));
-  };
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
 
-  const checkSurroundingStations = () => {
-    alert('Checking surrounding stations within 100 miles...');
-    handleRailSearch();
-  };
+        h1 {
+            font-family: Georgia, serif;
+            font-size: 3rem;
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-8">
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <h1 className="text-6xl font-bold text-center mb-8 text-gray-800" style={{ fontFamily: 'Georgia, serif' }}>
-          Travel Scanner
-        </h1>
+        .mode-buttons {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+        }
 
-        {/* Mode Selection Buttons */}
-        <div className="grid grid-cols-3 gap-4 mb-8">
-          <button
-            onClick={() => setActiveMode('road')}
-            className={`relative p-6 rounded-2xl text-white text-2xl font-bold transition-all duration-200 ${
-              activeMode === 'road'
-                ? 'bg-blue-600 shadow-lg scale-105 ring-4 ring-blue-300'
-                : 'bg-blue-500 shadow-md hover:shadow-lg hover:scale-102'
-            }`}
-            style={{
-              boxShadow: activeMode === 'road' 
-                ? '0 8px 0 #1e40af, 0 12px 20px rgba(0,0,0,0.3)'
-                : '0 6px 0 #2563eb, 0 8px 15px rgba(0,0,0,0.2)',
-              transform: activeMode === 'road' ? 'translateY(-2px)' : 'translateY(0)'
-            }}
-          >
-            <Car className="w-12 h-12 mx-auto mb-2" />
-            Road
-          </button>
+        .mode-btn {
+            position: relative;
+            padding: 30px 20px;
+            border: none;
+            border-radius: 15px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
 
-          <button
-            onClick={() => setActiveMode('rail')}
-            className={`relative p-6 rounded-2xl text-white text-2xl font-bold transition-all duration-200 ${
-              activeMode === 'rail'
-                ? 'bg-orange-600 shadow-lg scale-105 ring-4 ring-orange-300'
-                : 'bg-orange-500 shadow-md hover:shadow-lg hover:scale-102'
-            }`}
-            style={{
-              boxShadow: activeMode === 'rail'
-                ? '0 8px 0 #c2410c, 0 12px 20px rgba(0,0,0,0.3)'
-                : '0 6px 0 #ea580c, 0 8px 15px rgba(0,0,0,0.2)',
-              transform: activeMode === 'rail' ? 'translateY(-2px)' : 'translateY(0)'
-            }}
-          >
-            <Train className="w-12 h-12 mx-auto mb-2" />
-            Rail
-          </button>
+        .mode-btn.road {
+            background: linear-gradient(to bottom, #42a5f5, #2196f3);
+            box-shadow: 0 6px 0 #1976d2, 0 8px 15px rgba(0,0,0,0.2);
+        }
 
-          <button
-            onClick={() => setActiveMode('air')}
-            className={`relative p-6 rounded-2xl text-white text-2xl font-bold transition-all duration-200 ${
-              activeMode === 'air'
-                ? 'bg-teal-700 shadow-lg scale-105 ring-4 ring-teal-300'
-                : 'bg-teal-600 shadow-md hover:shadow-lg hover:scale-102'
-            }`}
-            style={{
-              boxShadow: activeMode === 'air'
-                ? '0 8px 0 #0f766e, 0 12px 20px rgba(0,0,0,0.3)'
-                : '0 6px 0 #0d9488, 0 8px 15px rgba(0,0,0,0.2)',
-              transform: activeMode === 'air' ? 'translateY(-2px)' : 'translateY(0)'
-            }}
-          >
-            <Plane className="w-12 h-12 mx-auto mb-2" />
-            Air
-          </button>
+        .mode-btn.road.active {
+            background: linear-gradient(to bottom, #1976d2, #1565c0);
+            box-shadow: 0 8px 0 #0d47a1, 0 12px 20px rgba(0,0,0,0.3);
+            transform: translateY(-2px);
+        }
+
+        .mode-btn.rail {
+            background: linear-gradient(to bottom, #ff9800, #f57c00);
+            box-shadow: 0 6px 0 #e65100, 0 8px 15px rgba(0,0,0,0.2);
+        }
+
+        .mode-btn.rail.active {
+            background: linear-gradient(to bottom, #e65100, #d84315);
+            box-shadow: 0 8px 0 #bf360c, 0 12px 20px rgba(0,0,0,0.3);
+            transform: translateY(-2px);
+        }
+
+        .mode-btn.air {
+            background: linear-gradient(to bottom, #26a69a, #00897b);
+            box-shadow: 0 6px 0 #00695c, 0 8px 15px rgba(0,0,0,0.2);
+        }
+
+        .mode-btn.air.active {
+            background: linear-gradient(to bottom, #00695c, #004d40);
+            box-shadow: 0 8px 0 #00251a, 0 12px 20px rgba(0,0,0,0.3);
+            transform: translateY(-2px);
+        }
+
+        .mode-btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .mode-btn:active {
+            transform: translateY(2px);
+        }
+
+        .icon {
+            font-size: 3rem;
+            margin-bottom: 10px;
+        }
+
+        .content-area {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .content-area h2 {
+            color: #ff9800;
+            font-size: 2rem;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #555;
+        }
+
+        .button-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+        }
+
+        .option-btn {
+            padding: 15px;
+            border: 2px solid #ddd;
+            background: #f5f5f5;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .option-btn:hover {
+            background: #e0e0e0;
+        }
+
+        .option-btn.selected {
+            background: #ff9800;
+            color: white;
+            border-color: #ff9800;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #ff9800;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            flex: 1;
+            padding: 18px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s;
+            min-width: 200px;
+        }
+
+        .action-btn.primary {
+            background: #ff9800;
+        }
+
+        .action-btn.primary:hover {
+            background: #f57c00;
+        }
+
+        .action-btn.secondary {
+            background: #26a69a;
+        }
+
+        .action-btn.secondary:hover {
+            background: #00897b;
+        }
+
+        .result-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .result-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .result-meta {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .route-box {
+            background: #fff3e0;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+        }
+
+        .route-box.alt {
+            background: #f5f5f5;
+        }
+
+        .route-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .route-details h4 {
+            font-size: 1.2rem;
+            margin-bottom: 5px;
+            color: #333;
+        }
+
+        .route-details p {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .price {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #ff9800;
+        }
+
+        .price.cheaper {
+            color: #4caf50;
+        }
+
+        .savings {
+            font-size: 0.85rem;
+            color: #4caf50;
+            margin-top: 5px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            font-size: 1.2rem;
+            color: #666;
+        }
+
+        .api-info {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+        }
+
+        .api-info a {
+            color: #1976d2;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+
+            .mode-btn {
+                padding: 20px 10px;
+                font-size: 1.2rem;
+            }
+
+            .icon {
+                font-size: 2rem;
+            }
+
+            .content-area {
+                padding: 20px;
+            }
+
+            .action-btn {
+                min-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Travel Scanner</h1>
+
+        <div class="mode-buttons">
+            <button class="mode-btn road" id="roadBtn">
+                <div class="icon">🚗</div>
+                Road
+            </button>
+            <button class="mode-btn rail" id="railBtn">
+                <div class="icon">🚆</div>
+                Rail
+            </button>
+            <button class="mode-btn air" id="airBtn">
+                <div class="icon">✈️</div>
+                Air
+            </button>
         </div>
 
-        {/* Rail Form */}
-        {activeMode === 'rail' && (
-          <div className="bg-white rounded-xl shadow-xl p-8 mb-8">
-            <h2 className="text-3xl font-bold mb-6 text-orange-600 flex items-center">
-              <Train className="w-8 h-8 mr-3" />
-              UK Rail Journey
-            </h2>
-
-            <div className="space-y-6">
-              {/* Timeframe Selection */}
-              <div>
-                <label className="block text-lg font-semibold mb-2 text-gray-700">
-                  When do you want to travel?
-                </label>
-                <div className="grid grid-cols-3 gap-3">
-                  {['Day', 'Week', 'Month'].map(time => (
-                    <button
-                      key={time}
-                      onClick={() => setRailData(prev => ({ ...prev, timeframe: time }))}
-                      className={`p-3 rounded-lg font-medium transition-all ${
-                        railData.timeframe === time
-                          ? 'bg-orange-500 text-white shadow-md'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                      }`}
-                    >
-                      {time}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Ticket Type */}
-              <div>
-                <label className="block text-lg font-semibold mb-2 text-gray-700">
-                  Ticket Type
-                </label>
-                <div className="grid grid-cols-2 gap-3">
-                  {['Single', 'Return'].map(type => (
-                    <button
-                      key={type}
-                      onClick={() => setRailData(prev => ({ ...prev, ticketType: type }))}
-                      className={`p-3 rounded-lg font-medium transition-all ${
-                        railData.ticketType === type
-                          ? 'bg-orange-500 text-white shadow-md'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                      }`}
-                    >
-                      {type}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Destination */}
-              <div>
-                <label className="block text-lg font-semibold mb-2 text-gray-700">
-                  Where do you want to travel to?
-                </label>
-                <input
-                  type="text"
-                  value={railData.destination}
-                  onChange={(e) => setRailData(prev => ({ ...prev, destination: e.target.value }))}
-                  placeholder="e.g., London Euston"
-                  className="w-full p-3 border-2 border-gray-300 rounded-lg focus:border-orange-500 focus:outline-none"
-                />
-              </div>
-
-              {/* Origin */}
-              <div>
-                <label className="block text-lg font-semibold mb-2 text-gray-700">
-                  Where are you travelling from?
-                </label>
-                <input
-                  type="text"
-                  value={railData.origin}
-                  onChange={(e) => setRailData(prev => ({ ...prev, origin: e.target.value }))}
-                  placeholder="e.g., Manchester Piccadilly"
-                  className="w-full p-3 border-2 border-gray-300 rounded-lg focus:border-orange-500 focus:outline-none"
-                />
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex gap-3">
-                <button
-                  onClick={handleRailSearch}
-                  className="flex-1 bg-orange-500 text-white p-4 rounded-lg font-bold text-lg hover:bg-orange-600 transition-colors flex items-center justify-center"
-                >
-                  <Search className="w-5 h-5 mr-2" />
-                  Search Routes
-                </button>
-                <button
-                  onClick={checkSurroundingStations}
-                  className="flex-1 bg-teal-600 text-white p-4 rounded-lg font-bold text-lg hover:bg-teal-700 transition-colors flex items-center justify-center"
-                >
-                  <MapPin className="w-5 h-5 mr-2" />
-                  Check Surrounding Stations
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Road Placeholder */}
-        {activeMode === 'road' && (
-          <div className="bg-white rounded-xl shadow-xl p-8 mb-8">
-            <h2 className="text-3xl font-bold mb-4 text-blue-600 flex items-center">
-              <Car className="w-8 h-8 mr-3" />
-              Road Journey
-            </h2>
-            <p className="text-gray-600 text-lg">Road pricing coming soon...</p>
-          </div>
-        )}
-
-        {/* Air Placeholder */}
-        {activeMode === 'air' && (
-          <div className="bg-white rounded-xl shadow-xl p-8 mb-8">
-            <h2 className="text-3xl font-bold mb-4 text-teal-700 flex items-center">
-              <Plane className="w-8 h-8 mr-3" />
-              Air Travel
-            </h2>
-            <p className="text-gray-600 text-lg">Flight pricing coming soon...</p>
-          </div>
-        )}
-
-        {/* Search History */}
-        {searchHistory.length > 0 && (
-          <div className="bg-white rounded-xl shadow-xl p-8">
-            <h2 className="text-2xl font-bold mb-6 text-gray-800">Search Results</h2>
-            <div className="space-y-6">
-              {searchHistory.map((search, idx) => (
-                <div key={idx} className="border-2 border-gray-200 rounded-lg p-6">
-                  <div className="flex justify-between items-start mb-4">
-                    <div>
-                      <h3 className="text-xl font-bold text-gray-800">{search.query}</h3>
-                      <p className="text-sm text-gray-500">
-                        {search.ticketType} • {search.timeframe} • {search.timestamp}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Main Route */}
-                  <div className="bg-orange-50 rounded-lg p-4 mb-3">
-                    <p className="font-semibold text-gray-700 mb-2">Direct Route</p>
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <p className="text-lg font-bold">{search.results.mainStation.from} → {search.results.mainStation.to}</p>
-                        <p className="text-sm text-gray-600">{search.results.mainStation.duration}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-2xl font-bold text-orange-600">£{search.results.mainStation.price}</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Alternative Routes */}
-                  {search.results.alternatives.length > 0 && (
-                    <div>
-                      <p className="font-semibold text-gray-700 mb-2">Alternative Stations (within £1)</p>
-                      {search.results.alternatives.map((alt, altIdx) => (
-                        <div key={altIdx} className="bg-gray-50 rounded-lg p-4 mb-2">
-                          <div className="flex justify-between items-center">
-                            <div>
-                              <p className="font-medium">{alt.from} → {search.results.mainStation.to}</p>
-                              <p className="text-sm text-gray-600">{alt.duration} • {alt.distance}</p>
-                            </div>
-                            <div className="text-right">
-                              <p className="text-xl font-bold text-green-600">£{alt.price}</p>
-                              <p className="text-xs text-gray-500">
-                                Save £{(parseFloat(search.results.mainStation.price) - parseFloat(alt.price)).toFixed(2)}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {search.results.alternatives.length === 0 && (
-                    <p className="text-sm text-gray-500 italic">No cheaper alternatives within £1 found within 100 miles</p>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
+        <div id="contentArea"></div>
+        <div id="resultsArea"></div>
     </div>
-  );
-}
+
+    <script>
+        var currentMode = null;
+        var searchHistory = [];
+        var railData = {
+            timeframe: '',
+            ticketType: '',
+            destination: '',
+            origin: ''
+        };
+
+        document.getElementById('roadBtn').addEventListener('click', function() {
+            setMode('road');
+        });
+        
+        document.getElementById('railBtn').addEventListener('click', function() {
+            setMode('rail');
+        });
+        
+        document.getElementById('airBtn').addEventListener('click', function() {
+            setMode('air');
+        });
+
+        function setMode(mode) {
+            currentMode = mode;
+            
+            var buttons = document.querySelectorAll('.mode-btn');
+            for (var i = 0; i < buttons.length; i++) {
+                buttons[i].classList.remove('active');
+            }
+            document.querySelector('.mode-btn.' + mode).classList.add('active');
+
+            showContent(mode);
+        }
+
+        function showContent(mode) {
+            var contentArea = document.getElementById('contentArea');
+            
+            if (mode === 'rail') {
+                contentArea.innerHTML = buildRailForm();
+                attachRailFormListeners();
+            } else if (mode === 'road') {
+                contentArea.innerHTML = '<div class="content-area"><h2>🚗 Road Journey</h2><p style="color: #666; font-size: 1.1rem;">Road pricing coming soon...</p></div>';
+            } else if (mode === 'air') {
+                contentArea.innerHTML = '<div class="content-area"><h2>✈️ Air Travel</h2><p style="color: #666; font-size: 1.1rem;">Flight pricing coming soon...</p></div>';
+            }
+        }
+
+        function buildRailForm() {
+            var html = '<div class="content-area">';
+            html = html + '<h2>🚆 UK Rail Journey</h2>';
+            html = html + '<div class="api-info"><strong>API Setup Required:</strong> To get live rail data, register at National Rail Data Portal. Currently showing demo data.</div>';
+            html = html + '<div class="form-group"><label>When do you want to travel?</label>';
+            html = html + '<div class="button-group">';
+            html = html + '<button class="option-btn" data-timeframe="Day">Day</button>';
+            html = html + '<button class="option-btn" data-timeframe="Week">Week</button>';
+            html = html + '<button class="option-btn" data-timeframe="Month">Month</button>';
+            html = html + '</div></div>';
+            html = html + '<div class="form-group"><label>Ticket Type</label>';
+            html = html + '<div class="button-group">';
+            html = html + '<button class="option-btn" data-ticket="Single">Single</button>';
+            html = html + '<button class="option-btn" data-ticket="Return">Return</button>';
+            html = html + '</div></div>';
+            html = html + '<div class="form-group"><label>Where do you want to travel to?</label>';
+            html = html + '<input type="text" id="destination" placeholder="London Euston"></div>';
+            html = html + '<div class="form-group"><label>Where are you travelling from?</label>';
+            html = html + '<input type="text" id="origin" placeholder="Manchester Piccadilly"></div>';
+            html = html + '<div class="action-buttons">';
+            html = html + '<button class="action-btn primary" id="searchBtn">Search Routes</button>';
+            html = html + '<button class="action-btn secondary" id="surroundBtn">Check Surrounding</button>';
+            html = html + '</div></div>';
+            return html;
+        }
+
+        function attachRailFormListeners() {
+            var timeframeBtns = document.querySelectorAll('[data-timeframe]');
+            for (var i = 0; i < timeframeBtns.length; i++) {
+                timeframeBtns[i].addEventListener('click', function() {
+                    selectTimeframe(this.getAttribute('data-timeframe'));
+                });
+            }
+            
+            var ticketBtns = document.querySelectorAll('[data-ticket]');
+            for (var j = 0; j < ticketBtns.length; j++) {
+                ticketBtns[j].addEventListener('click', function() {
+                    selectTicketType(this.getAttribute('data-ticket'));
+                });
+            }
+            
+            document.getElementById('destination').addEventListener('input', function() {
+                railData.destination = this.value;
+            });
+            
+            document.getElementById('origin').addEventListener('input', function() {
+                railData.origin = this.value;
+            });
+            
+            document.getElementById('searchBtn').addEventListener('click', searchRail);
+            document.getElementById('surroundBtn').addEventListener('click', checkSurrounding);
+        }
+
+        function selectTimeframe(value) {
+            railData.timeframe = value;
+            var buttons = document.querySelectorAll('[data-timeframe]');
+            for (var i = 0; i < buttons.length; i++) {
+                if (buttons[i].getAttribute('data-timeframe') === value) {
+                    buttons[i].classList.add('selected');
+                } else {
+                    buttons[i].classList.remove('selected');
+                }
+            }
+        }
+
+        function selectTicketType(value) {
+            railData.ticketType = value;
+            var buttons = document.querySelectorAll('[data-ticket]');
+            for (var i = 0; i < buttons.length; i++) {
+                if (buttons[i].getAttribute('data-ticket') === value) {
+                    buttons[i].classList.add('selected');
+                } else {
+                    buttons[i].classList.remove('selected');
+                }
+            }
+        }
+
+        function searchRail() {
+            if (!railData.timeframe || !railData.ticketType || !railData.destination || !railData.origin) {
+                alert('Please fill in all fields');
+                return;
+            }
+
+            var resultsArea = document.getElementById('resultsArea');
+            resultsArea.innerHTML = '<div class="loading">🔄 Searching for best fares...</div>';
+
+            setTimeout(function() {
+                var mainPrice = (Math.random() * 50 + 20).toFixed(2);
+                var results = {
+                    mainStation: {
+                        from: railData.origin,
+                        to: railData.destination,
+                        price: mainPrice,
+                        duration: '2h 15m',
+                        operator: 'Virgin Trains'
+                    },
+                    alternatives: []
+                };
+
+                for (var i = 0; i < 2; i++) {
+                    var altPrice = (parseFloat(mainPrice) - Math.random()).toFixed(2);
+                    if (Math.abs(parseFloat(altPrice) - parseFloat(mainPrice)) <= 1) {
+                        var suffix = i === 0 ? ' Parkway' : ' Central';
+                        results.alternatives.push({
+                            from: railData.origin + suffix,
+                            to: railData.destination,
+                            price: altPrice,
+                            duration: (2 + Math.floor(Math.random() * 2)) + 'h ' + (15 + Math.floor(Math.random() * 30)) + 'm',
+                            distance: Math.floor(Math.random() * 50 + 5) + ' miles from origin',
+                            operator: i === 0 ? 'CrossCountry' : 'Northern Rail'
+                        });
+                    }
+                }
+
+                var newSearch = {
+                    mode: 'Rail',
+                    query: railData.origin + ' to ' + railData.destination,
+                    timeframe: railData.timeframe,
+                    ticketType: railData.ticketType,
+                    results: results,
+                    timestamp: new Date().toLocaleString()
+                };
+
+                searchHistory.unshift(newSearch);
+                displayResults();
+            }, 1500);
+        }
+
+        function checkSurrounding() {
+            alert('Checking surrounding stations within 100 miles...');
+            searchRail();
+        }
+
+        function displayResults() {
+            var resultsArea = document.getElementById('resultsArea');
+            
+            if (searchHistory.length === 0) {
+                resultsArea.innerHTML = '';
+                return;
+            }
+
+            var parts = [];
+            
+            for (var idx = 0; idx < searchHistory.length; idx++) {
+                var search = searchHistory[idx];
+                parts.push('<div class="result-card">');
+                parts.push('<div class="result-title">' + search.query + '</div>');
+                parts.push('<div class="result-meta">' + search.ticketType + ' • ' + search.timeframe + ' • ' + search.timestamp + '</div>');
+                parts.push('<div class="route-box"><p style="font-weight: 600; margin-bottom: 10px; color: #666;">Direct Route</p>');
+                parts.push('<div class="route-info"><div class="route-details">');
+                parts.push('<h4>' + search.results.mainStation.from + ' to ' + search.results.mainStation.to + '</h4>');
+                parts.push('<p>' + search.results.mainStation.duration + ' • ' + search.results.mainStation.operator + '</p>');
+                parts.push('</div><div style="text-align: right;">');
+                parts.push('<div class="price">£' + search.results.mainStation.price + '</div>');
+                parts.push('</div></div></div>');
+
+                if (search.results.alternatives.length > 0) {
+                    parts.push('<p style="font-weight: 600; margin: 15px 0 10px; color: #666;">Alternatives within £1</p>');
+                    
+                    for (var i = 0; i < search.results.alternatives.length; i++) {
+                        var alt = search.results.alternatives[i];
+                        var savings = (parseFloat(search.results.mainStation.price) - parseFloat(alt.price)).toFixed(2);
+                        parts.push('<div class="route-box alt"><div class="route-info">');
+                        parts.push('<div class="route-details"><h4>' + alt.from + ' to ' + search.results.mainStation.to + '</h4>');
+                        parts.push('<p>' + alt.duration + ' • ' + alt.distance + ' • ' + alt.operator + '</p></div>');
+                        parts.push('<div style="text-align: right;"><div class="price cheaper">£' + alt.price + '</div>');
+                        parts.push('<div class="savings">Save £' + savings + '</div></div></div></div>');
+                    }
+                } else {
+                    parts.push('<p style="font-style: italic; color: #999; margin-top: 10px;">No cheaper alternatives found</p>');
+                }
+
+                parts.push('</div>');
+            }
+
+            parts.push('<div class="content-area"><h3 style="margin-bottom: 15px;">🔑 How to integrate real UK rail data:</h3>');
+            parts.push('<ol style="line-height: 1.8; color: #555;">');
+            parts.push('<li>Register at National Rail Data Portal</li>');
+            parts.push('<li>Get your free API key</li>');
+            parts.push('<li>Use the Darwin API for real-time train data</li>');
+            parts.push('<li>Consider Huxley 2 - a JSON wrapper</li>');
+            parts.push('<li>Alternative: TransportAPI (has free tier)</li>');
+            parts.push('</ol></div>');
+
+            resultsArea.innerHTML = parts.join('');
+        }
+
+        setMode('rail');
+    </script>
+</body>
+</html>
